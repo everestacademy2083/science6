@@ -1,0 +1,478 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>James Watt's Steam Engine</title>
+    <style>
+        :root {
+            --primary: #b45309;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --fire-base: #ef4444;
+            --fire-mid: #f97316;
+            --fire-top: #facc15;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center; padding: 10px;
+        }
+
+        .container {
+            width: 100%; max-width: 800px; background-color: var(--card-bg);
+            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        header {
+            background-color: #1e293b; color: white; padding: 15px; text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        header h1 { font-size: 1.5rem; letter-spacing: 1px; color: #fde68a;}
+
+        .canvas-wrapper {
+            width: 100%; background: #e2e8f0; display: flex; justify-content: center;
+            border-bottom: 2px solid #cbd5e1; position: relative;
+        }
+        
+        canvas { width: 100%; max-width: 800px; height: auto; }
+
+        .controls {
+            padding: 15px 20px; display: flex; flex-direction: column; gap: 10px;
+            background: #f8fafc; border-bottom: 2px solid #cbd5e1;
+        }
+        
+        .slider-box { display: flex; flex-direction: column; gap: 8px; }
+        .slider-label { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.95rem; color: #334155; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #cbd5e1; border-radius: 4px; }
+        input[type=range]::-webkit-slider-thumb {
+            height: 24px; width: 24px; border-radius: 50%; background: #ef4444; cursor: pointer;
+            -webkit-appearance: none; margin-top: -8px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Reading Section */
+        .reading-section { padding: 20px 25px; line-height: 1.6; }
+        .reading-section h2 { color: #0f172a; font-size: 1.4rem; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;}
+        
+        .scientific-method { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+        .step { background: #f8fafc; padding: 12px; border-left: 4px solid #38bdf8; border-radius: 4px; }
+        .step strong { color: #0369a1; font-size: 1.05rem;}
+        
+        .explanation-box {
+            background-color: #fffbeb; padding: 15px; border-radius: 8px;
+            border: 1px solid #fde68a; color: #451a03;
+        }
+        .explanation-box h3 { color: #b45309; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>James Watt's Steam Engine</h1>
+    </header>
+
+    <!-- Animation 1: The Inspiration -->
+    <div class="canvas-wrapper">
+        <canvas id="kettleCanvas" width="800" height="350"></canvas>
+    </div>
+    <div class="controls">
+        <div class="slider-box">
+            <div class="slider-label"><span style="color: #ef4444;">🔥 Fire Heat (Watch the Lid!)</span> <span id="kettle-val">Low</span></div>
+            <input type="range" id="kettle-heat" min="10" max="100" value="20">
+        </div>
+    </div>
+
+    <!-- Animation 2: The Working Engine -->
+    <div class="canvas-wrapper">
+        <canvas id="engineCanvas" width="800" height="400"></canvas>
+    </div>
+    <div class="controls">
+        <div class="slider-box">
+            <div class="slider-label"><span style="color: #ef4444;">🔥 Boiler Heat (Engine Speed)</span> <span id="engine-val">Off</span></div>
+            <input type="range" id="engine-heat" min="0" max="100" value="0">
+        </div>
+    </div>
+
+    <!-- Educational Text -->
+    <div class="reading-section">
+        <h2>Turning Inspiration into the Steam Engine</h2>
+        <div class="scientific-method">
+            <div class="step"><strong>1. Observe:</strong> James Watt watched a tea kettle boiling on the fire. He saw that the steam inside pushed the heavy metal lid up.</div>
+            <div class="step"><strong>2. Question (Ask):</strong> He asked, <em>"Can we use this strong steam pressure to push big machines instead of just a kettle lid?"</em></div>
+            <div class="step"><strong>3. Guess (Hypothesis):</strong> He guessed that if he trapped steam in a strong metal tube (a cylinder), it would have enough power to push a heavy metal rod (a piston).</div>
+            <div class="step"><strong>4. Test (Experiment):</strong> He built models and tested older engines. He saw they wasted heat. So, he experimented by adding a "Separate Condenser" to cool the steam without cooling the main cylinder.</div>
+            <div class="step"><strong>5. Data Collection:</strong> He measured how much coal his new engine used compared to the older engines to see if it was better.</div>
+            <div class="step"><strong>6. Analyze:</strong> He found out his new design was incredibly fast, powerful, and saved massive amounts of coal fuel!</div>
+            <div class="step"><strong>7. Report:</strong> He patented his design and showed factory owners that his steam engine could easily run their mills, trains, and boats.</div>
+        </div>
+
+        <div class="explanation-box">
+            <h3>⚙️ How Does a Steam Engine Work?</h3>
+            <p>A steam engine works by boiling water to create steam. When water turns into steam, it expands and creates a huge amount of pressure. This high-pressure steam travels through a pipe into a metal tube called a <strong>cylinder</strong>. Inside the cylinder, the steam pushes a sliding block called a <strong>piston</strong>.</p>
+            <p>As the steam pushes the piston back and forth, the piston pushes a metal rod. This rod is connected to a giant wheel (the flywheel). The back-and-forth motion of the piston is turned into circular motion by the wheel, which can then be used to power factory machines, trains, or boats!</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctx1 = document.getElementById('kettleCanvas').getContext('2d');
+    const ctx2 = document.getElementById('engineCanvas').getContext('2d');
+    
+    const kettleSlider = document.getElementById('kettle-heat');
+    const engineSlider = document.getElementById('engine-heat');
+    const kettleValText = document.getElementById('kettle-val');
+    const engineValText = document.getElementById('engine-val');
+
+    let time = 0;
+
+    // --- REALISTIC FIRE PARTICLE SYSTEM ---
+    class FireParticle {
+        constructor(x, y, maxHeat) {
+            this.reset(x, y, maxHeat);
+            // Randomize starting life so they don't all spawn at once
+            this.life = Math.random(); 
+        }
+        reset(x, y, maxHeat) {
+            this.x = x + (Math.random() * 40 - 20); // Spread base
+            this.y = y;
+            this.vx = Math.random() * 1 - 0.5; // Slight wind
+            this.vy = -1 - Math.random() * (maxHeat * 0.05); // Speed based on heat
+            this.radius = 8 + Math.random() * 8;
+            this.life = 1.0;
+            this.decay = 0.02 + Math.random() * 0.03;
+        }
+        update(maxHeat, baseX, baseY) {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= this.decay;
+            this.radius *= 0.95; // Shrink as it rises
+            if (this.life <= 0) this.reset(baseX, baseY, maxHeat);
+        }
+        draw(ctx) {
+            if (this.life <= 0) return;
+            // Color changes from Yellow (hot base) -> Orange -> Red (cool top)
+            let r=255, g=0, b=0;
+            if (this.life > 0.6) { g = 255; } // Yellow
+            else if (this.life > 0.3) { g = 165; } // Orange
+            else { g = 50; } // Red
+
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.life})`;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+            ctx.fill();
+        }
+    }
+
+    // --- KETTLE STATE ---
+    let kState = {
+        heat: 20, lidY: 0,
+        steam: [], fire: []
+    };
+    
+    // Init Kettle Fire
+    for(let i=0; i<30; i++) kState.fire.push(new FireParticle(370, 280, 100));
+
+    // --- ENGINE STATE ---
+    let eState = {
+        heat: 0, angle: 0, speed: 0,
+        fire: [], steamExhaust: [],
+        wheelX: 630, wheelY: 180, radius: 50, rodLength: 200, pistonY: 180
+    };
+
+    // Init Engine Fire
+    for(let i=0; i<40; i++) eState.fire.push(new FireParticle(100, 320, 100));
+
+    /**
+     * KETTLE SIMULATION
+     */
+    function updateKettle() {
+        kState.heat = parseInt(kettleSlider.value);
+        if (kState.heat < 30) kettleValText.innerText = "Low Heat";
+        else if (kState.heat < 70) kettleValText.innerText = "Boiling";
+        else kettleValText.innerText = "High Pressure!";
+
+        // Rattling Lid Physics
+        if (kState.heat > 30) {
+            let rattle = (kState.heat - 30) * 0.08;
+            kState.lidY = Math.random() * rattle - (rattle/2);
+            if (kState.heat > 80 && Math.random() < 0.15) kState.lidY -= 12; // Big pop
+        } else {
+            kState.lidY = 0;
+        }
+
+        // Fire particles
+        kState.fire.forEach(p => p.update(kState.heat, 370, 280));
+
+        // Steam from spout
+        if (Math.random() < (kState.heat/100) * 0.8) {
+            kState.steam.push({
+                x: 480 + Math.random()*10, y: 110,
+                vx: Math.random()*2 + 1, vy: -1 - Math.random()*2,
+                life: 1.0, size: 5
+            });
+        }
+        // Steam from lid pop
+        if (kState.lidY < -5 && Math.random() < 0.5) {
+            kState.steam.push({
+                x: 350 + Math.random()*40, y: 150 + kState.lidY,
+                vx: Math.random()*4 - 2, vy: -2,
+                life: 1.0, size: 10
+            });
+        }
+
+        // Update Steam
+        for (let i = kState.steam.length-1; i>=0; i--) {
+            let s = kState.steam[i];
+            s.x += s.vx; s.y += s.vy; s.life -= 0.015; s.size += 0.5; // Expands
+            if (s.life <= 0) kState.steam.splice(i, 1);
+        }
+    }
+
+    function drawKettle(ctx) {
+        ctx.clearRect(0, 0, 800, 350);
+
+        // Background / Labels
+        ctx.fillStyle = '#64748b'; ctx.font = 'bold 16px Arial';
+        ctx.fillText("Observation: The Boiling Kettle", 20, 30);
+        
+        if (kState.heat > 60) {
+            ctx.fillStyle = '#ef4444';
+            ctx.fillText("Notice how steam expands and pushes the heavy lid up!", 20, 60);
+        }
+
+        // 1. Stove
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(300, 280, 140, 20); // Grate
+        ctx.fillStyle = '#334155'; ctx.fillRect(320, 300, 100, 50); // Base
+
+        // 2. Realistic Fire
+        if(kState.heat > 10) kState.fire.forEach(p => p.draw(ctx));
+
+        // 3. Copper Kettle
+        let grad = ctx.createRadialGradient(350, 200, 10, 370, 220, 70);
+        grad.addColorStop(0, '#d97706'); grad.addColorStop(1, '#78350f');
+        ctx.fillStyle = grad;
+
+        // Body
+        ctx.beginPath(); ctx.arc(370, 220, 65, 0, Math.PI*2); ctx.fill();
+        ctx.fillRect(330, 275, 80, 10); // Flat bottom
+
+        // Spout
+        ctx.beginPath(); ctx.moveTo(430, 220); ctx.quadraticCurveTo(480, 200, 480, 120);
+        ctx.lineTo(465, 125); ctx.quadraticCurveTo(460, 190, 420, 250); ctx.fill();
+
+        // Handle
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 10;
+        ctx.beginPath(); ctx.arc(370, 150, 50, Math.PI, 0); ctx.stroke();
+
+        // 4. Rattling Lid
+        let ly = 158 + kState.lidY;
+        ctx.fillStyle = '#b45309';
+        ctx.beginPath(); ctx.ellipse(370, ly, 40, 8, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.arc(370, ly-8, 6, 0, Math.PI*2); ctx.fill(); // Knob
+
+        // 5. Steam Clouds
+        kState.steam.forEach(s => {
+            ctx.fillStyle = `rgba(226, 232, 240, ${s.life * 0.6})`;
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+        });
+    }
+
+    /**
+     * ENGINE SIMULATION
+     */
+    function updateEngine() {
+        eState.heat = parseInt(engineSlider.value);
+        if (eState.heat === 0) engineValText.innerText = "Off";
+        else if (eState.heat < 50) engineValText.innerText = "Low Pressure (Slow)";
+        else engineValText.innerText = "High Pressure (Fast)";
+
+        // Speed mapping
+        eState.speed = (eState.heat / 100) * 0.12;
+        eState.angle -= eState.speed; // Spin counter-clockwise for visual flow
+        if (eState.angle < -Math.PI * 2) eState.angle += Math.PI * 2;
+
+        // Update Fire
+        eState.fire.forEach(p => p.update(eState.heat, 100, 320));
+
+        // Steam Exhaust Particles (from Condenser)
+        let isExhausting = Math.sin(eState.angle) > 0; // Returning stroke pushes steam to condenser
+        if (isExhausting && eState.heat > 10 && Math.random() < 0.3) {
+            eState.steamExhaust.push({
+                x: 400 + Math.random()*20, y: 350,
+                vx: Math.random() - 0.5, vy: -1, life: 1.0, size: 5
+            });
+        }
+        for (let i = eState.steamExhaust.length-1; i>=0; i--) {
+            let s = eState.steamExhaust[i];
+            s.x += s.vx; s.y += s.vy; s.life -= 0.02; s.size += 0.5;
+            if (s.life <= 0) eState.steamExhaust.splice(i, 1);
+        }
+    }
+
+    function drawEngine(ctx) {
+        ctx.clearRect(0, 0, 800, 400);
+
+        ctx.fillStyle = '#64748b'; ctx.font = 'bold 16px Arial';
+        ctx.fillText("Invention: Working Steam Engine", 20, 30);
+
+        // --- KINEMATICS MATH ---
+        // Crank Pin coordinates on the wheel
+        let cx = eState.wheelX + eState.radius * Math.cos(eState.angle); 
+        let cy = eState.wheelY + eState.radius * Math.sin(eState.angle); 
+        
+        // Piston Hinge Math: x = crankX - sqrt(rodLength^2 - (crankY - pistonY)^2)
+        let dy = cy - eState.pistonY;
+        let dx = Math.sqrt(Math.pow(eState.rodLength, 2) - Math.pow(dy, 2));
+        let pistonHingeX = cx - dx; 
+        
+        // Piston Head sits inside cylinder. It moves exactly with the hinge.
+        let pistonHeadX = pistonHingeX - 60; // Offset head into the cylinder
+
+        let isPowerStroke = Math.sin(eState.angle) < 0; // Piston moving Right
+
+        // --- 1. BOILER & FIRE ---
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(40, 320, 120, 20); // Grate
+        if(eState.heat > 0) eState.fire.forEach(p => p.draw(ctx)); // Realistic Fire
+
+        // Iron Boiler
+        ctx.fillStyle = '#334155'; ctx.fillRect(40, 120, 120, 180);
+        ctx.beginPath(); ctx.arc(100, 120, 60, Math.PI, 0); ctx.fill(); // Dome top
+
+        // Boiling Water (Blue) inside boiler
+        ctx.fillStyle = 'rgba(2, 132, 199, 0.7)'; ctx.fillRect(45, 200, 110, 95);
+        // Steam (White) collecting at top
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; ctx.fillRect(45, 110, 110, 90);
+
+        // --- 2. PIPES & VALVES ---
+        ctx.strokeStyle = '#b45309'; ctx.lineWidth = 12; // Copper pipe
+        ctx.beginPath(); ctx.moveTo(100, 120); ctx.lineTo(100, 80); ctx.lineTo(260, 80); ctx.lineTo(260, 140); ctx.stroke();
+
+        // Valve 1: Intake (Top)
+        ctx.fillStyle = (isPowerStroke && eState.heat > 0) ? '#10b981' : '#ef4444'; // Green Open, Red Closed
+        ctx.fillRect(245, 110, 30, 15);
+        ctx.fillStyle = 'white'; ctx.font = '10px Arial'; ctx.fillText(isPowerStroke ? "OPEN" : "SHUT", 248, 121);
+
+        // Valve 2: Exhaust to Condenser (Bottom)
+        ctx.beginPath(); ctx.moveTo(260, 220); ctx.lineTo(260, 280); ctx.lineTo(360, 280); ctx.lineTo(360, 320); ctx.stroke();
+        ctx.fillStyle = (!isPowerStroke && eState.heat > 0) ? '#10b981' : '#ef4444';
+        ctx.fillRect(245, 235, 30, 15);
+        ctx.fillStyle = 'white'; ctx.fillText(!isPowerStroke ? "OPEN" : "SHUT", 248, 246);
+
+        // --- 3. SEPARATE CONDENSER (Watt's Invention) ---
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(320, 320, 80, 70); // Tank
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.6)'; ctx.fillRect(325, 350, 70, 35); // Cool water
+        
+        // Steam converting to water in condenser
+        eState.steamExhaust.forEach(s => {
+            ctx.fillStyle = `rgba(203, 213, 225, ${s.life})`;
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+        });
+
+        // --- 4. REALISTIC TRANSPARENT CYLINDER & PISTON ---
+        // Draw back wall of cylinder
+        ctx.fillStyle = '#cbd5e1'; ctx.fillRect(230, 140, 160, 80); 
+
+        // Draw Live Steam pushing piston (Red/Pink for hot pressure)
+        if (isPowerStroke && eState.heat > 0) {
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+            ctx.fillRect(240, 145, pistonHeadX - 240, 70); 
+        } 
+        // Draw Exhaust Steam leaving (Gray)
+        else if (!isPowerStroke && eState.heat > 0) {
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+            ctx.fillRect(240, 145, pistonHeadX - 240, 70);
+        }
+
+        // Piston Head (Solid Iron block sliding perfectly inside)
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(pistonHeadX, 142, 20, 76);
+        
+        // Piston Rod (Connects head to external hinge)
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 8;
+        ctx.beginPath(); ctx.moveTo(pistonHeadX + 20, eState.pistonY); ctx.lineTo(pistonHingeX, eState.pistonY); ctx.stroke();
+
+        // Draw Front Glass/Transparent Wall of Cylinder
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 4;
+        ctx.strokeRect(230, 140, 160, 80);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; ctx.fillRect(230, 140, 160, 80); // Glass glare
+
+        // Crosshead (Slider track)
+        ctx.fillStyle = '#b45309'; ctx.fillRect(pistonHingeX - 10, eState.pistonY - 12, 20, 24); // Hinge block
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(390, eState.pistonY - 14); ctx.lineTo(500, eState.pistonY - 14); ctx.stroke(); // Top rail
+        ctx.beginPath(); ctx.moveTo(390, eState.pistonY + 14); ctx.lineTo(500, eState.pistonY + 14); ctx.stroke(); // Bottom rail
+
+        // --- 5. CONNECTING ROD ---
+        // Connects Crosshead hinge to Crank Pin
+        ctx.strokeStyle = '#64748b'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(pistonHingeX, eState.pistonY); ctx.lineTo(cx, cy); ctx.stroke();
+        // Joints
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.arc(pistonHingeX, eState.pistonY, 6, 0, Math.PI*2); ctx.fill();
+
+        // --- 6. FLYWHEEL ---
+        // Support Base
+        ctx.fillStyle = '#334155';
+        ctx.beginPath(); ctx.moveTo(eState.wheelX-20, eState.wheelY); ctx.lineTo(eState.wheelX-40, 390); ctx.lineTo(eState.wheelX+40, 390); ctx.lineTo(eState.wheelX+20, eState.wheelY); ctx.fill();
+
+        // Big Heavy Wheel
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 16;
+        ctx.beginPath(); ctx.arc(eState.wheelX, eState.wheelY, eState.radius, 0, Math.PI*2); ctx.stroke();
+        
+        // Spokes
+        ctx.lineWidth = 8;
+        for(let i=0; i<6; i++) {
+            let a = eState.angle + (i * Math.PI/3);
+            ctx.beginPath(); ctx.moveTo(eState.wheelX, eState.wheelY); 
+            ctx.lineTo(eState.wheelX + eState.radius*Math.cos(a), eState.wheelY + eState.radius*Math.sin(a)); ctx.stroke();
+        }
+
+        // Crank Pin
+        ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI*2); ctx.fill();
+        // Hub
+        ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(eState.wheelX, eState.wheelY, 14, 0, Math.PI*2); ctx.fill();
+
+        // --- LABELS ---
+        ctx.fillStyle = '#0f172a'; ctx.font = 'bold 12px Arial';
+        ctx.fillText("1. Boiler (Heats Water)", 35, 105);
+        ctx.fillText("2. Steam pushes Piston", 240, 130);
+        ctx.fillText("4. Flywheel Spins", 580, 110);
+        
+        ctx.fillStyle = '#0284c7';
+        ctx.fillText("3. Condenser", 320, 310);
+        ctx.fillText("(Cools old steam)", 310, 390);
+    }
+
+    /**
+     * MAIN LOOP
+     */
+    function animate(timestamp) {
+        time = timestamp * 0.001;
+        
+        updateKettle();
+        drawKettle(ctx1);
+        
+        updateEngine();
+        drawEngine(ctx2);
+
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+</script>
+
+</body>
+</html>
+

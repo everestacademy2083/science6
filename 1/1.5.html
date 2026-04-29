@@ -1,0 +1,534 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Activity 1.2 - Sink or Float</title>
+    <style>
+        /* CSS Variables */
+        :root {
+            --primary: #0284c7;
+            --bg-color: #f8fafc;
+            --text-main: #0f172a;
+            --activity-red: #dc2626;
+            --instruction-green: #dcfce7;
+            --table-header: #bbf7d0;
+            --water-color: rgba(56, 189, 248, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center; padding: 15px 10px;
+            overflow-y: auto; min-height: 100vh;
+        }
+
+        .container {
+            width: 100%; max-width: 800px; background-color: #ffffff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 20px; border-radius: 12px;
+        }
+
+        /* Textbook Style Header */
+        .activity-badge {
+            background-color: var(--activity-red); color: white; padding: 6px 16px;
+            border-radius: 16px 16px 16px 0; font-weight: bold; font-size: 1.1rem;
+            display: inline-block; margin-bottom: 15px;
+        }
+
+        .instructions {
+            background-color: var(--instruction-green); padding: 15px; border-radius: 6px;
+            border: 1px solid #86efac; font-size: 1.05rem; line-height: 1.6; color: #166534;
+            margin-bottom: 20px;
+        }
+
+        .highlight-text { font-weight: bold; color: #065f46; }
+
+        /* Scientific Method Steps Alert */
+        .step-alert {
+            background-color: #fffbeb; border-left: 4px solid #f59e0b;
+            padding: 12px; margin-bottom: 20px; font-weight: bold; color: #b45309;
+            border-radius: 0 8px 8px 0; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* Interactive Table */
+        .table-title { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; color: var(--text-main); }
+        
+        .table-wrapper { overflow-x: auto; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 0 0 1px #cbd5e1; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px 10px; text-align: center; font-size: 1rem; }
+        th { background-color: var(--table-header); color: #065f46; font-weight: bold; }
+        
+        /* Guess Buttons */
+        .guess-btn {
+            padding: 6px 12px; margin: 2px; border: 1px solid #94a3b8; border-radius: 4px;
+            background: #f1f5f9; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .guess-btn.sink:hover, .guess-btn.sink.selected { background: #ef4444; color: white; border-color: #dc2626; }
+        .guess-btn.float:hover, .guess-btn.float.selected { background: #3b82f6; color: white; border-color: #2563eb; }
+        
+        .result-cell { font-weight: bold; font-size: 1.1rem; }
+        .correct { color: #16a34a; }
+        .incorrect { color: #dc2626; }
+
+        /* Canvas Simulation Area */
+        .canvas-container {
+            width: 100%; background-color: #f8fafc; border: 2px dashed #93c5fd;
+            border-radius: 8px; display: flex; justify-content: center; position: relative;
+            margin-bottom: 25px; overflow: hidden;
+            /* Disable touch scrolling over canvas to allow drag and drop */
+            touch-action: none; 
+        }
+        canvas { width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; cursor: grab; }
+        canvas:active { cursor: grabbing; }
+
+        /* Conclusion Section */
+        .conclusion-sec { background: #f0fdfa; padding: 20px; border-radius: 8px; border: 1px solid #5eead4; }
+        .conclusion-sec h3 { color: #0f766e; margin-bottom: 15px; font-size: 1.15rem; }
+        .conc-question { margin-bottom: 15px; }
+        .conc-q-text { font-weight: bold; color: #115e59; margin-bottom: 5px; }
+        .conc-a-text { color: #0284c7; font-style: italic; min-height: 24px; border-bottom: 1px dashed #93c5fd; padding-bottom: 4px;}
+        .filled { font-style: normal !important; font-weight: bold; border-bottom: 1px solid #38bdf8 !important; }
+
+        .scientific-process-def {
+            margin-top: 20px; padding: 15px; background: #e0f2fe; border-radius: 6px;
+            border-left: 4px solid #0284c7; color: #0c4a6e; font-size: 0.95rem; line-height: 1.6;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="activity-badge">Activity 1.2</div>
+    
+    <div class="instructions">
+        Collect wood, stone, plastic, eraser, iron nail, and a tree leaf.<br><br>
+        <span class="highlight-text">First, Guess if they will sink or float in water by filling the table below. Then, drag them into the bucket of water to Test your guess!</span>
+    </div>
+
+    <div class="step-alert" id="step-alert">
+        <span>Step 1: Make your Guesses in the table below!</span>
+        <span style="font-size: 1.5rem;">🤔</span>
+    </div>
+
+    <!-- Interactive Table -->
+    <div class="table-title">Table No. 1.2</div>
+    <div class="table-wrapper">
+        <table id="experiment-table">
+            <thead>
+                <tr>
+                    <th rowspan="2">S.N.</th>
+                    <th rowspan="2" style="text-align: left;">Object Name</th>
+                    <th colspan="2">Sinks or Floats?</th>
+                </tr>
+                <tr>
+                    <th>Guess</th>
+                    <th>Test Result</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Rows generated by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Physics Simulation Canvas -->
+    <div class="canvas-container">
+        <canvas id="simCanvas" width="800" height="450"></canvas>
+    </div>
+
+    <!-- Conclusions -->
+    <div class="conclusion-sec">
+        <h3>Conclusions & Discussion</h3>
+        
+        <div class="conc-question">
+            <div class="conc-q-text">1. Did your guesses match the test results?</div>
+            <div class="conc-a-text" id="ans-1">Complete the experiment to see the answer...</div>
+        </div>
+        
+        <div class="conc-question">
+            <div class="conc-q-text">2. Why didn't all objects sink in water?</div>
+            <div class="conc-a-text" id="ans-2">Complete the experiment to see the answer...</div>
+        </div>
+
+        <div class="conc-question">
+            <div class="conc-q-text">3. What is the conclusion of this activity?</div>
+            <div class="conc-a-text" id="ans-3">Complete the experiment to see the answer...</div>
+        </div>
+
+        <div class="scientific-process-def">
+            <strong>Scientific Learning Process:</strong><br>
+            Observing, guessing, testing, discussing, explaining, and concluding like this is called the Scientific Method.
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * DATA STRUCTURE
+     */
+    const items = [
+        { id: 1, name: "Wood Piece", emoji: "🪵", willSink: false },
+        { id: 2, name: "Stone", emoji: "🪨", willSink: true },
+        { id: 3, name: "Plastic Cap", emoji: "🧴", willSink: false },
+        { id: 4, name: "Eraser", emoji: "🧽", willSink: true },
+        { id: 5, name: "Iron Nail", emoji: "🔩", willSink: true },
+        { id: 6, name: "Tree Leaf", emoji: "🍃", willSink: false }
+    ];
+
+    // State tracking
+    let itemsGuessed = 0;
+    let itemsTested = 0;
+
+    /**
+     * TABLE LOGIC
+     */
+    const tbody = document.getElementById('table-body');
+    const stepAlert = document.getElementById('step-alert');
+
+    function renderTable() {
+        tbody.innerHTML = '';
+        items.forEach(item => {
+            // Add state properties
+            item.guessed = null; // 'sink' or 'float'
+            item.tested = false;
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.id}</td>
+                <td style="text-align: left; font-weight: bold; font-size: 1.2rem;">${item.emoji} <span style="font-size: 1rem; font-weight: normal;">${item.name}</span></td>
+                <td>
+                    <button class="guess-btn sink" onclick="makeGuess(${item.id}, 'sink', this)">Sink</button>
+                    <button class="guess-btn float" onclick="makeGuess(${item.id}, 'float', this)">Float</button>
+                </td>
+                <td class="result-cell" id="result-${item.id}">-</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.makeGuess = function(id, guessType, btnElement) {
+        const item = items.find(i => i.id === id);
+        
+        // Remove selection from siblings in the same cell
+        const buttons = btnElement.parentElement.querySelectorAll('.guess-btn');
+        buttons.forEach(b => b.classList.remove('selected'));
+        
+        // Select this one
+        btnElement.classList.add('selected');
+        
+        if (item.guessed === null) {
+            itemsGuessed++;
+        }
+        item.guessed = guessType;
+        
+        // Spawn the item on the shelf in the canvas if not already there
+        if (!item.onShelf && !item.tested) {
+            spawnOnShelf(item);
+        }
+
+        checkProgress();
+    };
+
+    function recordTestResult(item) {
+        item.tested = true;
+        itemsTested++;
+        
+        const resultCell = document.getElementById(`result-${item.id}`);
+        const actualResult = item.willSink ? 'sink' : 'float';
+        const isCorrect = item.guessed === actualResult;
+        
+        const resultText = item.willSink ? 'Sank' : 'Floated';
+        const icon = isCorrect ? '✅' : '❌';
+        const colorClass = isCorrect ? 'correct' : 'incorrect';
+        
+        resultCell.innerHTML = `<span class="${colorClass}">${resultText} ${icon}</span>`;
+        
+        checkProgress();
+    }
+
+    function checkProgress() {
+        if (itemsTested === items.length) {
+            stepAlert.innerHTML = `<span>Step 4: Analyze Data & Conclusion</span><span style="font-size: 1.5rem;">📝</span>`;
+            stepAlert.style.borderLeftColor = '#10b981';
+            stepAlert.style.color = '#065f46';
+            stepAlert.style.backgroundColor = '#dcfce7';
+            fillConclusions();
+        } else if (itemsGuessed === items.length) {
+            stepAlert.innerHTML = `<span>Step 3: Test your guesses! Drag items into the water bucket.</span><span style="font-size: 1.5rem;">🧪</span>`;
+            stepAlert.style.borderLeftColor = '#3b82f6';
+            stepAlert.style.color = '#1e3a8a';
+            stepAlert.style.backgroundColor = '#eff6ff';
+        }
+    }
+
+    function fillConclusions() {
+        setTimeout(() => {
+            document.getElementById('ans-1').innerText = "Some of your initial guesses might have been correct, and some might have been wrong. Testing shows us the real truth!";
+            document.getElementById('ans-1').classList.add('filled');
+            
+            document.getElementById('ans-2').innerText = "Because they have different densities. Objects lighter (less dense) than water float, while heavier objects sink. Wood, plastic, and leaves are less dense than water, so they float.";
+            document.getElementById('ans-2').classList.add('filled');
+            
+            document.getElementById('ans-3').innerText = "Density determines if an object floats or sinks. By using the Scientific Method (Guess -> Test -> Conclude), we accurately discovered which materials sink or float.";
+            document.getElementById('ans-3').classList.add('filled');
+        }, 1000);
+    }
+
+    /**
+     * CANVAS PHYSICS SIMULATION
+     */
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Bucket properties
+    const bucket = { x: 350, y: 150, width: 250, height: 250, waterLevel: 200 };
+    
+    // Shelf properties
+    const shelf = { x: 50, y: 250, width: 200, height: 20 };
+
+    // Physics objects array
+    let physObjects = [];
+    
+    let draggingObj = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    function spawnOnShelf(itemData) {
+        itemData.onShelf = true;
+        
+        // Calculate position on shelf based on how many are already there
+        const shelfCount = physObjects.filter(p => !p.inWater).length;
+        const col = shelfCount % 3;
+        const row = Math.floor(shelfCount / 3);
+        
+        const px = shelf.x + 40 + (col * 60);
+        const py = shelf.y - 30 - (row * 60);
+
+        physObjects.push({
+            data: itemData,
+            x: px,
+            y: py,
+            vx: 0,
+            vy: 0,
+            radius: 20,
+            inWater: false,
+            settled: false,
+            rotation: 0
+        });
+    }
+
+    // Touch and Mouse Event Listeners for Canvas
+    function getPointerPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        // Handle CSS scaling
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+        };
+    }
+
+    function onPointerDown(e) {
+        const pos = getPointerPos(e);
+        
+        // Check collision with objects (reverse order to pick top ones)
+        for (let i = physObjects.length - 1; i >= 0; i--) {
+            let obj = physObjects[i];
+            let dist = Math.hypot(pos.x - obj.x, pos.y - obj.y);
+            if (dist < obj.radius * 2 && !obj.inWater) {
+                draggingObj = obj;
+                dragOffsetX = pos.x - obj.x;
+                dragOffsetY = pos.y - obj.y;
+                obj.vx = 0; obj.vy = 0; // stop movement
+                
+                // Prevent scrolling only when we grab an object
+                if(e.cancelable) e.preventDefault(); 
+                break;
+            }
+        }
+    }
+
+    function onPointerMove(e) {
+        if (draggingObj) {
+            if(e.cancelable) e.preventDefault(); // Stop scrolling while dragging
+            const pos = getPointerPos(e);
+            draggingObj.x = pos.x - dragOffsetX;
+            draggingObj.y = pos.y - dragOffsetY;
+        }
+    }
+
+    function onPointerUp(e) {
+        if (draggingObj) {
+            // Check if dropped safely inside bucket opening limits
+            if (draggingObj.x > bucket.x + 10 && draggingObj.x < bucket.x + bucket.width - 10 &&
+                draggingObj.y < bucket.y + 50) {
+                
+                // Drop into water
+                draggingObj.inWater = true;
+                draggingObj.vy = 2; // Initial drop speed
+                
+                // Record the test result!
+                recordTestResult(draggingObj.data);
+            } else {
+                // Snap back to shelf area roughly if missed
+                draggingObj.vy = 5; // Fall down to shelf
+            }
+            draggingObj = null;
+        }
+    }
+
+    canvas.addEventListener('mousedown', onPointerDown);
+    canvas.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+
+    canvas.addEventListener('touchstart', onPointerDown, {passive: false});
+    canvas.addEventListener('touchmove', onPointerMove, {passive: false});
+    window.addEventListener('touchend', onPointerUp);
+
+    /**
+     * DRAW AND UPDATE LOOP
+     */
+    function updatePhysics() {
+        physObjects.forEach(obj => {
+            if (obj === draggingObj) return;
+
+            if (obj.inWater) {
+                // Physics inside water
+                let targetY;
+                if (obj.data.willSink) {
+                    targetY = bucket.y + bucket.height - obj.radius - 20; // Bottom of bucket safely
+                } else {
+                    targetY = bucket.waterLevel + Math.sin(Date.now() * 0.003 + obj.x) * 5; // Bob at surface
+                }
+
+                // Move towards target
+                let force = (targetY - obj.y) * 0.02; // Buoyancy / Gravity force
+                obj.vy += force;
+                obj.vy *= 0.85; // Water resistance (friction)
+                obj.y += obj.vy;
+
+                // Stop lateral movement
+                obj.vx *= 0.9;
+                obj.x += obj.vx;
+                
+                // Keep strictly inside bucket walls so objects don't clip out
+                const wallPadding = 15;
+                if (obj.x < bucket.x + obj.radius + wallPadding) obj.x = bucket.x + obj.radius + wallPadding;
+                if (obj.x > bucket.x + bucket.width - obj.radius - wallPadding) obj.x = bucket.x + bucket.width - obj.radius - wallPadding;
+
+            } else {
+                // Gravity in air (falling to shelf)
+                obj.vy += 0.5;
+                obj.y += obj.vy;
+                
+                // Floor collision (Shelf)
+                if (obj.y > shelf.y - obj.radius && obj.x > shelf.x && obj.x < shelf.x + shelf.width) {
+                    obj.y = shelf.y - obj.radius;
+                    obj.vy *= -0.3; // Bounce
+                } 
+                // Floor collision (Ground)
+                else if (obj.y > canvas.height - obj.radius) {
+                    obj.y = canvas.height - obj.radius;
+                    obj.vy *= -0.3;
+                }
+            }
+        });
+    }
+
+    function drawScene() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Environment / Room
+        ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0,0,800,450);
+        
+        // Draw Wall line
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, 350); ctx.lineTo(800, 350); ctx.stroke();
+        
+        // Draw Floor
+        ctx.fillStyle = '#e2e8f0'; ctx.fillRect(0, 350, 800, 100);
+
+        // Draw Shelf
+        ctx.fillStyle = '#8b5cf6'; // Purple shelf
+        ctx.fillRect(shelf.x, shelf.y, shelf.width, shelf.height);
+        // Shelf brackets
+        ctx.fillStyle = '#6d28d9';
+        ctx.beginPath(); ctx.moveTo(shelf.x + 20, shelf.y + shelf.height); ctx.lineTo(shelf.x + 20, shelf.y + shelf.height + 40); ctx.lineTo(shelf.x + 40, shelf.y + shelf.height); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(shelf.x + 160, shelf.y + shelf.height); ctx.lineTo(shelf.x + 160, shelf.y + shelf.height + 40); ctx.lineTo(shelf.x + 180, shelf.y + shelf.height); ctx.fill();
+
+        // Draw Bucket Background (Back glass)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath(); ctx.roundRect(bucket.x, bucket.y, bucket.width, bucket.height, [10, 10, 20, 20]); ctx.fill();
+
+        // Draw Water
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
+        let waterH = (bucket.y + bucket.height) - bucket.waterLevel;
+        ctx.beginPath(); ctx.roundRect(bucket.x + 5, bucket.waterLevel, bucket.width - 10, waterH - 5, [0, 0, 15, 15]); ctx.fill();
+        
+        // Water surface line
+        ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(bucket.x + 5, bucket.waterLevel); ctx.lineTo(bucket.x + bucket.width - 5, bucket.waterLevel); ctx.stroke();
+
+        // Draw Objects
+        physObjects.forEach(obj => {
+            ctx.save();
+            ctx.translate(obj.x, obj.y);
+            
+            // Add shadow
+            ctx.shadowColor = 'rgba(0,0,0,0.2)';
+            ctx.shadowBlur = 5;
+            ctx.shadowOffsetY = 3;
+
+            // Draw Emoji
+            ctx.font = '36px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(obj.data.emoji, 0, 0);
+            
+            ctx.restore();
+        });
+
+        // Draw Bucket Foreground (Front glass & rims)
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 6;
+        ctx.beginPath(); 
+        ctx.moveTo(bucket.x, bucket.y); 
+        ctx.lineTo(bucket.x, bucket.y + bucket.height - 15);
+        ctx.quadraticCurveTo(bucket.x, bucket.y + bucket.height, bucket.x + 15, bucket.y + bucket.height);
+        ctx.lineTo(bucket.x + bucket.width - 15, bucket.y + bucket.height);
+        ctx.quadraticCurveTo(bucket.x + bucket.width, bucket.y + bucket.height, bucket.x + bucket.width, bucket.y + bucket.height - 15);
+        ctx.lineTo(bucket.x + bucket.width, bucket.y);
+        ctx.stroke();
+        
+        // Rim
+        ctx.fillStyle = '#64748b';
+        ctx.beginPath(); ctx.ellipse(bucket.x + bucket.width/2, bucket.y, bucket.width/2 + 5, 10, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#f8fafc'; // hole opening
+        ctx.beginPath(); ctx.ellipse(bucket.x + bucket.width/2, bucket.y, bucket.width/2, 6, 0, 0, Math.PI*2); ctx.fill();
+
+        // Labels
+        ctx.fillStyle = '#0f172a'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+        ctx.fillText("Shelf", shelf.x + shelf.width/2, shelf.y + 40);
+        ctx.fillText("Water Bucket", bucket.x + bucket.width/2, bucket.y + bucket.height + 30);
+    }
+
+    function animate() {
+        updatePhysics();
+        drawScene();
+        requestAnimationFrame(animate);
+    }
+
+    // Initialize
+    renderTable();
+    animate();
+
+</script>
+</body>
+</html>

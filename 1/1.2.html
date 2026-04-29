@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Step Ladder</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap');
+
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --text-main: #f8fafc;
+            --wood-dark: #451a03;
+            --wood-med: #78350f;
+            --wood-light: #b45309;
+            --accent-gold: #fbbf24;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-blue: #0ea5e9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            color: var(--text-main);
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; flex-direction: column;
+            min-width: 1000px; /* Essential for side-by-side layout on Desktop Site */
+            overflow: hidden;
+        }
+
+        /* --- DESKTOP SITE WARNING --- */
+        #desktop-hint {
+            background: linear-gradient(90deg, #ea580c, #eab308);
+            color: white; text-align: center; padding: 8px 20px;
+            font-size: 1.1rem; font-weight: 800; display: flex;
+            justify-content: center; align-items: center; gap: 15px;
+            flex-shrink: 0; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        #desktop-hint button {
+            background: rgba(0,0,0,0.4); border: 1px solid white; color: white;
+            padding: 4px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        #desktop-hint button:hover { background: white; color: black; }
+
+        /* --- HEADER --- */
+        .header {
+            height: 80px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; background: rgba(15, 23, 42, 0.95); border-bottom: 2px solid #334155;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6); z-index: 10;
+        }
+        .header h1 {
+            font-size: 2.2rem; font-weight: 900;
+            background: linear-gradient(to right, #fbbf24, #f97316);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .stats-box { display: flex; gap: 20px; }
+        .stat-badge {
+            background: rgba(2, 6, 23, 0.9); border: 2px solid;
+            padding: 8px 20px; border-radius: 25px;
+            font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        #attempts-badge { border-color: var(--accent-blue); color: var(--accent-blue); }
+
+        /* --- MAIN GAME AREA --- */
+        .game-area {
+            flex: 1; display: flex; overflow: hidden; position: relative;
+        }
+
+        /* LEFT: The Ladder Construction Zone */
+        .ladder-zone {
+            width: 550px; height: 100%;
+            background: rgba(0, 0, 0, 0.3); border-right: 4px dashed #334155;
+            display: flex; justify-content: center; align-items: center;
+            position: relative; overflow-y: auto; padding: 40px 0;
+        }
+        .ladder-zone::-webkit-scrollbar { width: 8px; }
+        .ladder-zone::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+        .ladder-structure {
+            position: relative; width: 480px;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+
+        /* The Vertical Wooden Poles */
+        .pole {
+            position: absolute; top: -50px; bottom: -50px; width: 35px;
+            background: linear-gradient(90deg, var(--wood-dark), var(--wood-light), var(--wood-dark));
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 5px 0 15px rgba(0,0,0,0.6);
+            border-radius: 5px; z-index: 1;
+        }
+        .pole.left { left: 0; }
+        .pole.right { right: 0; }
+
+        /* Drop Slots for Rungs */
+        .ladder-slot {
+            width: 100%; height: 110px; /* Height must match rung */
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px; position: relative; z-index: 2;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .ladder-slot.drag-over { background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; }
+        
+        .slot-indicator {
+            position: absolute; left: -50px; top: 50%; transform: translateY(-50%);
+            font-size: 1.5rem; font-weight: 900; color: #475569;
+        }
+
+        /* RIGHT: The Parts Tray & Controls */
+        .tray-zone {
+            flex: 1; display: flex; flex-direction: column;
+            padding: 30px; background: transparent; position: relative;
+        }
+
+        .tray-header {
+            font-size: 1.8rem; font-weight: 800; color: #f8fafc; margin-bottom: 20px;
+            text-transform: uppercase; border-bottom: 2px solid #334155; padding-bottom: 10px;
+        }
+
+        .parts-pool {
+            flex: 1; display: flex; flex-wrap: wrap; gap: 20px;
+            align-content: flex-start; overflow-y: auto; padding-bottom: 40px;
+        }
+        .parts-pool::-webkit-scrollbar { width: 8px; }
+        .parts-pool::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+        /* --- THE RUNGS (Draggable Items) --- */
+        .ladder-rung {
+            width: 480px; height: 110px; flex-shrink: 0;
+            background: linear-gradient(180deg, var(--wood-med), var(--wood-dark));
+            border: 2px solid #290f02; border-radius: 6px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            cursor: grab; position: relative; touch-action: none;
+            transition: transform 0.1s, box-shadow 0.1s; z-index: 10;
+        }
+        .ladder-rung:active { cursor: grabbing; }
+        .ladder-rung.dragging {
+            position: fixed; z-index: 9999;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.8); transform: scale(1.02); opacity: 0.95;
+            pointer-events: none; /* Crucial for dropping */
+        }
+
+        /* Metallic Nails on the rung ends */
+        .nail {
+            position: absolute; width: 14px; height: 14px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #94a3b8, #334155);
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.5), 1px 1px 3px rgba(0,0,0,0.8);
+        }
+        .nail.left { left: 10px; } .nail.right { right: 10px; }
+
+        /* The Paper Note attached to the Wood */
+        .rung-note {
+            width: 380px; height: 85px; background: #fef3c7; border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+            justify-content: center; padding: 5px 15px; color: #020617;
+            border: 1px solid #d97706; position: relative; overflow: hidden;
+        }
+        .rung-note::before { /* Tape effect */
+            content: ''; position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+            width: 40px; height: 15px; background: rgba(255,255,255,0.6); box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .step-title { font-size: 1.2rem; font-weight: 900; color: #b45309; text-transform: uppercase; line-height: 1.2;}
+        .step-desc { font-size: 0.95rem; font-weight: 600; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+
+        /* --- VALIDATION STATES --- */
+        .ladder-rung.correct {
+            border-color: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); pointer-events: none;
+        }
+        .ladder-rung.correct .rung-note { background: #d1fae5; border-color: #10b981; }
+        .ladder-rung.correct .step-title { color: #047857; }
+
+        .ladder-rung.incorrect {
+            border-color: #ef4444; animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        .ladder-rung.incorrect .rung-note { background: #fee2e2; border-color: #ef4444; }
+        .ladder-rung.incorrect .step-title { color: #b91c1c; }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        /* --- CHECK BUTTON --- */
+        .check-btn-container {
+            margin-top: 20px; display: flex; justify-content: flex-end;
+        }
+        .check-btn {
+            background: linear-gradient(135deg, #0ea5e9, #8b5cf6); color: #fff;
+            border: none; padding: 20px 50px; font-size: 1.6rem; font-weight: 900;
+            border-radius: 40px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.5); text-transform: uppercase;
+        }
+        .check-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(14, 165, 233, 0.7); }
+        .check-btn:active { transform: translateY(0); }
+
+        /* --- END SCREEN --- */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(2, 6, 23, 0.98); display: flex; flex-direction: column; align-items: center;
+            padding: 60px 40px; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; overflow-y: auto;
+        }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .book-summary {
+            width: 100%; max-width: 800px; background: #0f172a; border: 1px solid #334155;
+            border-radius: 15px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); margin-bottom: 40px;
+        }
+        .book-summary h2 { font-size: 3rem; color: #10b981; text-align: center; margin-bottom: 10px; text-transform: uppercase; }
+        .book-summary p.score-report { text-align: center; font-size: 1.4rem; color: #94a3b8; margin-bottom: 40px; }
+        .chapter-section { display: flex; flex-direction: column; gap: 15px; }
+        .step-row { display: flex; align-items: center; background: #1e293b; padding: 15px; border-radius: 10px; border-left: 5px solid #fbbf24; }
+        .step-num { font-size: 1.5rem; font-weight: 900; color: #fbbf24; width: 50px; }
+        .step-content strong { color: #38bdf8; font-size: 1.3rem; display: block; margin-bottom: 5px;}
+        .step-content span { color: #e2e8f0; font-size: 1.1rem; }
+        
+        .play-again-btn {
+            background: linear-gradient(135deg, #fbbf24, #f97316); color: #000; border: none; padding: 18px 60px;
+            font-size: 1.5rem; font-weight: 900; border-radius: 40px; cursor: pointer; transition: transform 0.2s;
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.4);
+        }
+        .play-again-btn:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- 1. MASTER GAME DATA -->
+    <!-- ========================================== -->
+    <script>
+        const MASTER_GAME_DATA = {
+            gameTitle: "Scientific Learning Process",
+            // The steps MUST be in the correct sequential order here.
+            steps: [
+                { id: 1, title: "Observe", note: "Look closely at objects or events around you using your senses." },
+                { id: 2, title: "Questioning (Ask)", note: "Ask 'why', 'what', or 'how' about the things you just observed." },
+                { id: 3, title: "Guess (Hypothesis)", note: "Make a smart guess about the possible answer to your question." },
+                { id: 4, title: "Collecting Data", note: "Do a practical test or experiment and gather facts and information." },
+                { id: 5, title: "Analyze the Data", note: "Study the collected information carefully to see what it means." },
+                { id: 6, title: "Conclusion", note: "Decide if your original guess was right or wrong based on the facts." },
+                { id: 7, title: "Making Report", note: "Write down your findings clearly so you can share them with others." }
+            ]
+
+        };
+    </script>
+
+    <div id="desktop-hint">
+        <span>📱 Enable <strong>"Desktop Site"</strong> in your mobile browser settings for the proper side-by-side view!</span>
+        <button onclick="document.getElementById('desktop-hint').style.display='none'">Dismiss</button>
+    </div>
+
+    <div class="header">
+        <h1 id="ui-title">Game Title</h1>
+        <div class="stats-box">
+            <div class="stat-badge" id="attempts-badge">Attempts: <span id="attempts">0</span></div>
+        </div>
+    </div>
+
+    <div class="game-area">
+        
+        <!-- LEFT: Ladder Zone -->
+        <div class="ladder-zone">
+            <div class="ladder-structure" id="ladderStructure">
+                <div class="pole left"></div>
+                <div class="pole right"></div>
+                <!-- Slots injected by JS -->
+            </div>
+        </div>
+
+        <!-- RIGHT: Parts Tray -->
+        <div class="tray-zone">
+            <div class="tray-header">Up to Down (Drag & Drop)</div>
+            
+            <div class="parts-pool" id="partsPool">
+                <!-- Rungs injected and scrambled by JS -->
+            </div>
+
+            <div class="check-btn-container">
+                <button class="check-btn" id="checkBtn">Check Alignment</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- End Game Overlay -->
+    <div class="overlay" id="endScreen">
+        <div class="book-summary">
+            <h2>Process Mastered!</h2>
+            <p class="score-report">Completed in <span id="finalAttempts" style="color:#fbbf24; font-weight:bold;">0</span> attempts.</p>
+            <div class="chapter-section" id="summaryContent"></div>
+        </div>
+        <button class="play-again-btn" onclick="startGame()">Restart Process</button>
+    </div>
+
+    <script>
+        // --- AUDIO ENGINE ---
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        const playSound = (type) => {
+            if (!audioCtx) return;
+            try {
+                if (type === 'grab') {
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'drop') {
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.type = 'square'; osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.8, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'correct') {
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+                } else if (type === 'wrong') {
+                    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.8, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'win') {
+                    const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
+                    osc1.type = 'sine'; osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime); osc1.frequency.setValueAtTime(659.25, audioCtx.currentTime+0.1); osc1.frequency.setValueAtTime(783.99, audioCtx.currentTime+0.2); osc1.frequency.setValueAtTime(1046.50, audioCtx.currentTime+0.3);
+                    gain1.gain.setValueAtTime(0.5, audioCtx.currentTime); gain1.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
+                    osc1.connect(gain1); gain1.connect(audioCtx.destination); osc1.start(); osc1.stop(audioCtx.currentTime + 0.8);
+                }
+            } catch (e) {}
+        };
+        document.body.addEventListener('click', initAudio, { once: true });
+        document.body.addEventListener('touchstart', initAudio, { once: true });
+
+        // --- GAME LOGIC & UI BUILDER ---
+        const gameData = MASTER_GAME_DATA;
+        document.getElementById('ui-title').innerText = gameData.gameTitle;
+        const ladderStructure = document.getElementById('ladderStructure');
+        const partsPool = document.getElementById('partsPool');
+        const checkBtn = document.getElementById('checkBtn');
+        const attemptsEl = document.getElementById('attempts');
+
+        let attempts = 0;
+
+        function startGame() {
+            attempts = 0;
+            attemptsEl.innerText = attempts;
+            document.getElementById('endScreen').classList.remove('active');
+            
+            buildLadder();
+            buildRungs();
+        }
+
+        function buildLadder() {
+            // Keep poles, remove old slots
+            const poles = ladderStructure.querySelectorAll('.pole');
+            ladderStructure.innerHTML = '';
+            poles.forEach(p => ladderStructure.appendChild(p));
+
+            // Build slots Top to Bottom (Step 1 is top, Step N is bottom)
+            gameData.steps.forEach((step, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'ladder-slot';
+                slot.dataset.expectedId = step.id;
+                
+                const indicator = document.createElement('div');
+                indicator.className = 'slot-indicator';
+                indicator.innerText = index + 1; // 1, 2, 3...
+                slot.appendChild(indicator);
+
+                ladderStructure.appendChild(slot);
+            });
+        }
+
+        function buildRungs() {
+            partsPool.innerHTML = '';
+            // Scramble the steps for the pool
+            const shuffledSteps = [...gameData.steps].sort(() => Math.random() - 0.5);
+
+            shuffledSteps.forEach(step => {
+                const rung = document.createElement('div');
+                rung.className = 'ladder-rung';
+                rung.dataset.id = step.id;
+
+                rung.innerHTML = `
+                    <div class="nail left"></div>
+                    <div class="rung-note">
+                        <div class="step-title">${step.title}</div>
+                        <div class="step-desc">${step.note}</div>
+                    </div>
+                    <div class="nail right"></div>
+                `;
+
+                // Add Pointer Events for Drag & Drop
+                rung.addEventListener('pointerdown', dragStart);
+
+                partsPool.appendChild(rung);
+            });
+        }
+
+        // --- CUSTOM DRAG & DROP LOGIC ---
+        let activeRung = null;
+        let initialParent = null;
+        let startX, startY;
+        let offsetX, offsetY;
+
+        function dragStart(e) {
+            initAudio();
+            if (e.target.closest('.ladder-rung').classList.contains('correct')) return; // Locked
+            
+            activeRung = e.target.closest('.ladder-rung');
+            initialParent = activeRung.parentElement;
+            
+            // Remove error classes if picking it up again
+            activeRung.classList.remove('incorrect');
+
+            const rect = activeRung.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+
+            // Set fixed dimensions so it doesn't shrink when popped out of flexbox
+            activeRung.style.width = `${rect.width}px`;
+            activeRung.style.height = `${rect.height}px`;
+
+            activeRung.classList.add('dragging');
+            document.body.appendChild(activeRung); // Move to body for fixed positioning free of overflow clipping
+            
+            moveRung(e.clientX, e.clientY);
+            playSound('grab');
+
+            document.addEventListener('pointermove', dragMove);
+            document.addEventListener('pointerup', dragEnd);
+        }
+
+        function dragMove(e) {
+            if (!activeRung) return;
+            moveRung(e.clientX, e.clientY);
+
+            // Highlight drop zone
+            activeRung.style.pointerEvents = 'none'; // Temporarily disable to find element below
+            const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+            activeRung.style.pointerEvents = 'auto'; // Re-enable
+
+            document.querySelectorAll('.ladder-slot').forEach(s => s.classList.remove('drag-over'));
+            
+            if (elemBelow) {
+                const slot = elemBelow.closest('.ladder-slot');
+                if (slot) slot.classList.add('drag-over');
+            }
+        }
+
+        function moveRung(x, y) {
+            activeRung.style.left = `${x - offsetX}px`;
+            activeRung.style.top = `${y - offsetY}px`;
+        }
+
+        function dragEnd(e) {
+            if (!activeRung) return;
+            playSound('drop');
+
+            document.removeEventListener('pointermove', dragMove);
+            document.removeEventListener('pointerup', dragEnd);
+
+            // Find Drop Zone
+            activeRung.style.pointerEvents = 'none';
+            const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+            
+            const targetSlot = elemBelow ? elemBelow.closest('.ladder-slot') : null;
+            const targetPool = elemBelow ? elemBelow.closest('.parts-pool') : null;
+
+            activeRung.classList.remove('dragging');
+            activeRung.style.left = '';
+            activeRung.style.top = '';
+            activeRung.style.width = ''; // Let css handle width natively inside containers
+            activeRung.style.height = '';
+            activeRung.style.pointerEvents = 'auto';
+
+            document.querySelectorAll('.ladder-slot').forEach(s => s.classList.remove('drag-over'));
+
+            if (targetSlot) {
+                // Check if slot already has a rung (other than the indicator)
+                const existingRung = targetSlot.querySelector('.ladder-rung');
+                
+                if (existingRung && existingRung !== activeRung) {
+                    // SWAP LOGIC: Move existing rung to the activeRung's old parent
+                    initialParent.appendChild(existingRung);
+                }
+                targetSlot.appendChild(activeRung);
+            } else if (targetPool) {
+                partsPool.appendChild(activeRung);
+            } else {
+                // Dropped in nowhere, return to initial parent
+                initialParent.appendChild(activeRung);
+            }
+
+            activeRung = null;
+            initialParent = null;
+        }
+
+        // --- CHECKING LOGIC ---
+        checkBtn.addEventListener('click', () => {
+            initAudio();
+            const slots = document.querySelectorAll('.ladder-slot');
+            let allFilled = true;
+            let allCorrect = true;
+
+            // Reset states for a fresh check
+            document.querySelectorAll('.ladder-rung').forEach(r => r.classList.remove('incorrect'));
+
+            slots.forEach(slot => {
+                const rung = slot.querySelector('.ladder-rung');
+                const expectedId = slot.dataset.expectedId;
+
+                if (!rung) {
+                    allFilled = false;
+                    allCorrect = false;
+                } else {
+                    if (rung.dataset.id === expectedId) {
+                        rung.classList.add('correct');
+                        // Sound handled cumulatively below
+                    } else {
+                        rung.classList.add('incorrect');
+                        allCorrect = false;
+                    }
+                }
+            });
+
+            attempts++;
+            attemptsEl.innerText = attempts;
+
+            if (!allFilled) {
+                playSound('wrong');
+                alert("Please place all steps on the ladder before checking!");
+                return;
+            }
+
+            if (allCorrect) {
+                playSound('win');
+                setTimeout(showWinScreen, 800);
+            } else {
+                playSound('wrong');
+            }
+        });
+
+        // --- END SCREEN ---
+        function showWinScreen() {
+            document.getElementById('finalAttempts').innerText = attempts;
+            const summaryContent = document.getElementById('summaryContent');
+            summaryContent.innerHTML = '';
+            
+            gameData.steps.forEach((step, index) => {
+                const row = document.createElement('div');
+                row.className = 'step-row';
+                row.innerHTML = `
+                    <div class="step-num">${index + 1}</div>
+                    <div class="step-content">
+                        <strong>${step.title}</strong>
+                        <span>${step.note}</span>
+                    </div>
+                `;
+                summaryContent.appendChild(row);
+            });
+
+            document.getElementById('endScreen').classList.add('active');
+        }
+
+        // Boot Game
+        startGame();
+
+    </script>
+</body>
+</html>
+
+
