@@ -1,0 +1,497 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Activity 1.1 - Fruit Classification</title>
+    <style>
+        /* CSS Variables */
+        :root {
+            --bg-color: #f8fafc;
+            --text-main: #0f172a;
+            --activity-red: #dc2626;
+            --instruction-green: #dcfce7;
+            --table-header: #bbf7d0;
+            --primary-blue: #2563eb;
+            --pill-bg: #ffffff;
+            --pill-border: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center; padding: 15px 10px;
+            overflow-y: auto; min-height: 100vh;
+        }
+
+        .container {
+            width: 100%; max-width: 900px; background-color: #ffffff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 20px; border-radius: 12px;
+        }
+
+        /* Header & Instructions */
+        .activity-badge {
+            background-color: var(--activity-red); color: white; padding: 6px 16px;
+            border-radius: 16px 16px 16px 0; font-weight: bold; font-size: 1.1rem;
+            display: inline-block; margin-bottom: 15px;
+        }
+
+        .instructions {
+            background-color: var(--instruction-green); padding: 15px; border-radius: 6px;
+            border: 1px solid #86efac; font-size: 1.05rem; line-height: 1.6; color: #166534;
+            margin-bottom: 20px;
+        }
+
+        /* Fruit Bank */
+        .fruit-bank-title { font-weight: bold; color: var(--primary-blue); margin-bottom: 5px; font-size: 1.1rem; }
+        .fruit-bank-subtitle { font-size: 0.9rem; color: #64748b; margin-bottom: 10px; line-height: 1.4; }
+        
+        .fruit-bank {
+            display: flex; flex-wrap: wrap; gap: 8px; padding: 15px;
+            background-color: #e0f2fe; border: 2px dashed #93c5fd; border-radius: 8px;
+            margin-bottom: 25px; min-height: 100px;
+        }
+
+        /* Draggable Pills */
+        .fruit-pill {
+            background-color: var(--pill-bg); border: 2px solid var(--pill-border);
+            padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #334155;
+            cursor: grab; display: inline-flex; align-items: center; gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none;
+            transition: transform 0.1s, background-color 0.2s, border-color 0.2s;
+            touch-action: none; /* Prevents scroll when dragging this specific item */
+        }
+
+        .fruit-pill:active { cursor: grabbing; transform: scale(0.95); }
+        .fruit-pill.dragging {
+            position: fixed; z-index: 1000; pointer-events: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15); opacity: 0.9;
+            transform: translate(-50%, -50%) scale(1.1); margin: 0;
+        }
+
+        /* Table Area */
+        .table-title { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th, td { border: 2px solid #94a3b8; padding: 15px 10px; font-size: 1.05rem; }
+        
+        td:first-child { width: 25%; background-color: var(--table-header); font-weight: bold; color: #065f46; text-align: left; }
+        
+        /* Drop Zones (Circles inside Cells) */
+        .td-circles { display: flex; gap: 15px; flex-wrap: wrap; align-items: stretch; }
+        
+        .drop-circle {
+            border: 2px dashed #94a3b8; border-radius: 25px;
+            min-height: 80px; flex: 1; min-width: 130px;
+            padding: 20px 10px 10px 10px; position: relative;
+            display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; justify-content: center;
+            background-color: #f8fafc; transition: background-color 0.2s, border-color 0.2s;
+        }
+        .drop-circle.hover { background-color: #fef08a; border-color: #eab308; }
+        
+        .circle-label {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: white; padding: 2px 10px; border-radius: 12px; border: 1px solid #94a3b8;
+            font-size: 0.85rem; font-weight: bold; color: #334155; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Dropped Items */
+        .fruit-pill.dropped { cursor: pointer; border-color: var(--primary-blue); background-color: #eff6ff; }
+        .fruit-pill.dropped:hover { background-color: #fee2e2; border-color: #ef4444; }
+        .fruit-pill.dropped:hover::after { content: ' ✖'; color: #ef4444; }
+
+        /* Vibrate Animation */
+        @keyframes vibrate {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px) rotate(-2deg); }
+            40%, 80% { transform: translateX(4px) rotate(2deg); }
+        }
+        .vibrate {
+            animation: vibrate 0.4s linear both;
+            background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important;
+        }
+
+        /* Check Button */
+        .btn-wrapper { text-align: center; margin-bottom: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;}
+        .check-btn {
+            padding: 12px 30px; font-size: 1.1rem; background-color: var(--primary-blue);
+            color: white; border: none; border-radius: 8px; cursor: pointer;
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s;
+        }
+        .check-btn:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .check-btn:hover { background-color: #1d4ed8; }
+
+        /* Autofill Button */
+        .autofill-btn {
+            padding: 12px 30px; font-size: 1.1rem; background-color: #f8fafc;
+            color: var(--primary-blue); border: 2px solid var(--primary-blue); border-radius: 8px; cursor: pointer;
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.2s;
+        }
+        .autofill-btn:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .autofill-btn:hover { background-color: #eff6ff; }
+
+        /* Conclusion Section */
+        .conclusion-sec { font-size: 1.05rem; line-height: 1.8; color: var(--text-main); background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .conclusion-list { margin-top: 10px; list-style-type: none; padding-left: 0; }
+        .conclusion-list li { display: flex; align-items: flex-start; margin-bottom: 12px; }
+        .conclusion-list span { margin-right: 10px; font-weight: bold; white-space: nowrap; }
+        
+        .auto-fill-text {
+            flex-grow: 1; border-bottom: 2px dashed #9ca3af;
+            color: #64748b; min-height: 28px; padding: 0 5px; font-style: italic;
+            transition: color 0.3s;
+        }
+        .auto-fill-text.filled {
+            color: #047857; font-weight: bold; font-style: normal; border-bottom-style: solid;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="activity-badge">Activity 1.1</div>
+    
+    <div class="instructions">
+        Observe these fruits by looking, touching, smelling, and tasting. Classify these fruits into different groups based on shape, color, taste, and hardness.<br>
+        <em>Note: Some fruits have the same shape AND color! You can drag a fruit from the bank multiple times!</em>
+    </div>
+
+    <div class="fruit-bank-title">🍎 Fruit Bank (Original fruits stay here)</div>
+    <div class="fruit-bank-subtitle">Drag fruits into the circles below. Tap a fruit inside a circle to remove it.</div>
+    <div class="fruit-bank" id="fruit-bank"></div>
+
+    <div class="table-title">Table No. 1.1</div>
+    <table>
+        <tbody>
+            <tr>
+                <td>📐 Matching Shape</td>
+                <td>
+                    <div class="td-circles">
+                        <div class="drop-circle" data-accept="shape-round">
+                            <div class="circle-label">Round (गोलो)</div>
+                        </div>
+                        <div class="drop-circle" data-accept="shape-long">
+                            <div class="circle-label">Long (लामो)</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>👁️ Matching Color</td>
+                <td>
+                    <div class="td-circles">
+                        <div class="drop-circle" data-accept="color-yellow">
+                            <div class="circle-label">Yellow (पहेंलो)</div>
+                        </div>
+                        <div class="drop-circle" data-accept="color-red">
+                            <div class="circle-label">Red (रातो)</div>
+                        </div>
+                        <div class="drop-circle" data-accept="color-green">
+                            <div class="circle-label">Green (हरियो)</div>
+                        </div>
+                        <div class="drop-circle" data-accept="color-brown">
+                            <div class="circle-label">Brown (खैरो)</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>👅 Matching Taste</td>
+                <td>
+                    <div class="td-circles">
+                        <div class="drop-circle" data-accept="taste-sweet">
+                            <div class="circle-label">Sweet (गुलियो)</div>
+                        </div>
+                        <div class="drop-circle" data-accept="taste-sour">
+                            <div class="circle-label">Sour (अमिलो)</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>👆 Matching Hardness</td>
+                <td>
+                    <div class="td-circles">
+                        <div class="drop-circle" data-accept="hard-soft">
+                            <div class="circle-label">Soft (नरम)</div>
+                        </div>
+                        <div class="drop-circle" data-accept="hard-hard">
+                            <div class="circle-label">Hard (कडा)</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="btn-wrapper">
+        <button id="check-btn" class="check-btn">Check Answers ✅</button>
+        <button id="autofill-btn" class="autofill-btn">Autofill 🪄</button>
+    </div>
+
+    <div class="conclusion-sec">
+        Draw a conclusion from the activity based on the table:
+        <ul class="conclusion-list">
+            <li>
+                <span>Example:</span>
+                <span style="font-weight: normal; font-style: italic;">Fruits have different tastes, such as sour and sweet.</span>
+            </li>
+            <li>
+                <span>1.</span>
+                <div class="auto-fill-text" id="conc-1">Conclusion will auto-fill here after checking...</div>
+            </li>
+            <li>
+                <span>2.</span>
+                <div class="auto-fill-text" id="conc-2">Conclusion will auto-fill here after checking...</div>
+            </li>
+            <li>
+                <span>3.</span>
+                <div class="auto-fill-text" id="conc-3">Conclusion will auto-fill here after checking...</div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Fruit Data with allowed matching classes
+    const items = [
+        { name: "Mango", emoji: "🥭", traits: ["shape-long", "color-yellow", "taste-sweet", "hard-soft"] },
+        { name: "Banana", emoji: "🍌", traits: ["shape-long", "color-yellow", "taste-sweet", "hard-soft"] },
+        { name: "Orange", emoji: "🍊", traits: ["shape-round", "color-yellow", "taste-sweet", "hard-soft"] },
+        { name: "Apple", emoji: "🍎", traits: ["shape-round", "color-red", "taste-sweet", "hard-hard"] },
+        { name: "Lemon", emoji: "🍋", traits: ["shape-round", "color-yellow", "taste-sour", "hard-soft"] },
+        { name: "Pomegranate", emoji: "🔴", traits: ["shape-round", "color-red", "taste-sweet", "hard-hard"] },
+        { name: "Grapes", emoji: "🍇", traits: ["shape-round", "color-green", "taste-sweet", "hard-soft"] },
+        { name: "Amala", emoji: "🍏", traits: ["shape-round", "color-green", "taste-sour", "hard-hard"] },
+        { name: "Cucumber", emoji: "🥒", traits: ["shape-long", "color-green", "hard-hard"] },
+        { name: "Coconut", emoji: "🥥", traits: ["shape-round", "color-brown", "taste-sweet", "hard-hard"] },
+        { name: "Walnut", emoji: "🌰", traits: ["shape-round", "color-brown", "hard-hard"] },
+        { name: "Papaya", emoji: "🍈", traits: ["shape-long", "color-yellow", "taste-sweet", "hard-soft"] }
+    ];
+
+    const bank = document.getElementById('fruit-bank');
+    
+    // Drag State
+    let isDragging = false;
+    let draggedData = null;
+    let dragClone = null;
+    let currentDropZone = null;
+
+    // Initialize Bank
+    items.forEach(item => {
+        let pill = document.createElement('div');
+        pill.className = 'fruit-pill';
+        pill.innerHTML = `<span style="font-size: 1.2rem;">${item.emoji}</span> ${item.name}`;
+        
+        // Setup Drag Events
+        pill.addEventListener('mousedown', (e) => startDrag(e, item));
+        pill.addEventListener('touchstart', (e) => startDrag(e, item), {passive: false});
+
+        bank.appendChild(pill);
+    });
+
+    /** DRAG AND DROP LOGIC **/
+    function startDrag(e, itemData) {
+        if (e.type === 'mousedown' && e.button !== 0) return; 
+        e.preventDefault(); 
+
+        isDragging = true;
+        draggedData = itemData;
+
+        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        dragClone = document.createElement('div');
+        dragClone.className = 'fruit-pill dragging';
+        dragClone.innerHTML = `<span style="font-size: 1.2rem;">${itemData.emoji}</span> ${itemData.name}`;
+        dragClone.style.left = clientX + 'px';
+        dragClone.style.top = clientY + 'px';
+        document.body.appendChild(dragClone);
+
+        window.addEventListener('mousemove', moveDrag);
+        window.addEventListener('touchmove', moveDrag, {passive: false});
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
+    }
+
+    function moveDrag(e) {
+        if (!isDragging || !dragClone) return;
+        e.preventDefault(); 
+
+        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        dragClone.style.left = clientX + 'px';
+        dragClone.style.top = clientY + 'px';
+
+        dragClone.style.display = 'none'; 
+        let elemBelow = document.elementFromPoint(clientX, clientY);
+        dragClone.style.display = 'flex';
+
+        if (currentDropZone) currentDropZone.classList.remove('hover');
+
+        // Look for the specific circle drop zone
+        let zone = elemBelow ? elemBelow.closest('.drop-circle') : null;
+        if (zone) {
+            currentDropZone = zone;
+            currentDropZone.classList.add('hover');
+        } else {
+            currentDropZone = null;
+        }
+    }
+
+    function endDrag(e) {
+        if (!isDragging) return;
+
+        dragClone.style.display = 'none';
+        let clientX = e.type.includes('touch') ? e.changedTouches[0].clientX : e.clientX;
+        let clientY = e.type.includes('touch') ? e.changedTouches[0].clientY : e.clientY;
+        let elemBelow = document.elementFromPoint(clientX, clientY);
+        
+        let zone = elemBelow ? elemBelow.closest('.drop-circle') : null;
+
+        if (currentDropZone) currentDropZone.classList.remove('hover');
+
+        // Drop Logic (Creates a copy in the circle)
+        if (zone && draggedData) {
+            // Check if this specific fruit is already in this specific circle to prevent duplicates
+            let existing = Array.from(zone.children).find(c => c.dataset.name === draggedData.name);
+            
+            if (!existing) {
+                let newPill = document.createElement('div');
+                newPill.className = 'fruit-pill dropped';
+                newPill.dataset.name = draggedData.name;
+                newPill.dataset.traits = JSON.stringify(draggedData.traits); // Store actual traits
+                newPill.dataset.targetZone = zone.dataset.accept; // What trait this circle expects
+                
+                newPill.innerHTML = `<span style="font-size: 1.2rem;">${draggedData.emoji}</span> ${draggedData.name}`;
+                
+                // Allow removal
+                newPill.onclick = function() {
+                    this.remove();
+                    document.getElementById('check-btn').innerText = "Check Answers ✅";
+                };
+                
+                zone.appendChild(newPill);
+                // Note: We DO NOT hide the original item in the bank, so it can be dragged again!
+            }
+        }
+
+        // Cleanup
+        window.removeEventListener('mousemove', moveDrag);
+        window.removeEventListener('touchmove', moveDrag);
+        window.removeEventListener('mouseup', endDrag);
+        window.removeEventListener('touchend', endDrag);
+
+        dragClone.remove();
+        dragClone = null;
+        isDragging = false;
+        draggedData = null;
+        currentDropZone = null;
+    }
+
+    /** CHECK ANSWERS LOGIC **/
+    document.getElementById('check-btn').addEventListener('click', function() {
+        let placedCount = 0;
+        let allCorrect = true;
+
+        // Verify each dropped item
+        document.querySelectorAll('.dropped').forEach(pill => {
+            placedCount++;
+            pill.classList.remove('vibrate'); 
+            
+            let traits = JSON.parse(pill.dataset.traits);
+            let targetZone = pill.dataset.targetZone;
+
+            // Check if the fruit's traits array includes the required trait of the circle
+            if (!traits.includes(targetZone)) {
+                allCorrect = false;
+                pill.style.borderColor = '';
+                pill.style.backgroundColor = '';
+                
+                // Trigger reflow to restart CSS animation
+                void pill.offsetWidth;
+                pill.classList.add('vibrate');
+            } else {
+                // Correct!
+                pill.style.borderColor = '#22c55e';
+                pill.style.backgroundColor = '#dcfce7';
+            }
+        });
+
+        // Validation Results
+        if (placedCount < 10) {
+            this.innerText = "Place a few more items first! ⏳";
+            setTimeout(() => this.innerText = "Check Answers ✅", 2000);
+        } else if (!allCorrect) {
+            this.innerText = "Some are wrong! Tap red ones to remove them 🔄";
+            setTimeout(() => this.innerText = "Check Answers ✅", 3000);
+        } else if (allCorrect) {
+            this.innerText = "Perfect! Generating Conclusion... 🎉";
+            this.style.backgroundColor = '#16a34a'; 
+
+            // Auto-fill Conclusions
+            setTimeout(() => {
+                let conc1 = document.getElementById('conc-1');
+                let conc2 = document.getElementById('conc-2');
+                let conc3 = document.getElementById('conc-3');
+
+                conc1.innerText = "We can classify fruits by shape. Apple and Orange are round, while Banana, Mango, and Cucumber are long.";
+                conc1.classList.add('filled');
+
+                conc2.innerText = "Fruits can be grouped by color: Mango is yellow, Apple is red, Grapes are green, and Walnut is brown.";
+                conc2.classList.add('filled');
+
+                conc3.innerText = "Hardness and taste are also key properties. Coconut and Walnut are hard. Lemon and Amala are sour.";
+                conc3.classList.add('filled');
+            }, 800);
+        }
+    });
+
+    /** AUTOFILL LOGIC **/
+    document.getElementById('autofill-btn').addEventListener('click', function() {
+        // 1. Clear any existing placed fruits
+        document.querySelectorAll('.dropped').forEach(pill => pill.remove());
+        
+        const dropCircles = document.querySelectorAll('.drop-circle');
+        
+        // 2. Loop through every circle drop zone
+        dropCircles.forEach(zone => {
+            const acceptTrait = zone.dataset.accept;
+            
+            // Find items from the bank that have this specific trait
+            const matchingItems = items.filter(item => item.traits.includes(acceptTrait));
+            
+            // Limit to 3 items per circle to keep it neat
+            const itemsToPlace = matchingItems.slice(0, 3);
+            
+            // 3. Create and place the pills
+            itemsToPlace.forEach(data => {
+                let newPill = document.createElement('div');
+                newPill.className = 'fruit-pill dropped';
+                newPill.dataset.name = data.name;
+                newPill.dataset.traits = JSON.stringify(data.traits);
+                newPill.dataset.targetZone = acceptTrait;
+                
+                newPill.innerHTML = `<span style="font-size: 1.2rem;">${data.emoji}</span> ${data.name}`;
+                
+                newPill.onclick = function() {
+                    this.remove();
+                    document.getElementById('check-btn').innerText = "Check Answers ✅";
+                };
+                
+                zone.appendChild(newPill);
+            });
+        });
+        
+        // 4. Automatically trigger the check button so it lights up green and fills conclusions
+        document.getElementById('check-btn').click();
+    });
+
+</script>
+</body>
+</html>
+
+
